@@ -1,29 +1,32 @@
-# Conectar el pre-registro de MotoYa con Supabase
+# Configuración y operación del pre-registro de MotoYa
 
-La web está alojada en GitHub Pages (sitio estático). Para guardar registros hace falta una base de datos externa. Esta configuración usa Supabase con Row Level Security (RLS): el navegador solo tendrá permiso de insertar registros; no podrá leer, editar ni borrar los datos.
+## Estado comprobado
+- Proyecto Supabase de MotoYa creado.
+- El esquema SQL de `supabase/schema.sql` se ejecutó correctamente.
+- La tabla `public.pre_registros` aparece en Table Editor.
+- El formulario de la web GitHub Pages envió un registro de prueba y el registro apareció en Supabase.
+- El navegador utiliza únicamente la clave publishable/public. Nunca colocar claves `secret`, `service_role` ni la contraseña de base de datos en GitHub Pages.
 
-## 1. Crear el proyecto
-1. Entra en https://supabase.com/ y crea una cuenta/proyecto para MotoYa.
-2. Guarda la contraseña de la base de datos en un lugar privado. No la pongas en GitHub ni en el código de la web.
-3. En el panel del proyecto abre **SQL Editor**.
-4. Abre el archivo `supabase/schema.sql` de este repositorio, copia todo su contenido, pégalo en SQL Editor y pulsa **Run**.
-5. En **Project Settings → API** (o **Data API**) copia la **Project URL** y la clave **anon/public**. Nunca uses `service_role`, `secret` ni la contraseña de la base de datos en la web.
+## Arquitectura y permisos
+La web estática se aloja en GitHub Pages y envía los registros a Supabase mediante HTTPS/PostgREST. La tabla tiene Row Level Security (RLS) activado. El rol público `anon` tiene permiso de insertar únicamente los campos autorizados por el esquema y las políticas; no tiene permiso público de lectura, edición ni borrado. El equipo autorizado consulta los registros desde el panel privado de Supabase.
 
-## 2. Activar el formulario
-El formulario del sitio no debe anunciar que guarda registros hasta que se complete esta conexión. Cuando tengas la Project URL y la clave anon/public, se integran en el frontend como configuración pública. La clave anon está diseñada para uso en navegador; la seguridad depende de las políticas RLS del SQL anterior.
+## Protección antispam actual
+El formulario incluye un campo señuelo oculto y un control básico del tiempo de interacción. Son filtros de baja complejidad que pueden ser eludidos por bots sofisticados. No equivalen a CAPTCHA ni a rate limiting en el servidor.
 
-## 3. Comprobar que funciona
-1. Envía un registro de prueba con datos ficticios.
-2. En Supabase abre **Table Editor → pre_registros** y confirma que aparece.
-3. Comprueba que la web muestra confirmación solo después de que Supabase acepte el registro.
-4. No publiques ni compartas capturas que muestren datos personales reales.
+## Antes de promocionar ampliamente
+1. Integrar un CAPTCHA como Cloudflare Turnstile o alternativa equivalente, verificando el token en servidor (no basta con validarlo solo en JavaScript).
+2. Implementar límites de frecuencia en servidor/Edge Function y monitorear intentos abusivos.
+3. Definir un plazo de conservación de datos y un canal real para solicitudes de acceso, corrección y eliminación.
+4. Revisar el aviso de privacidad y las obligaciones legales aplicables antes de una convocatoria masiva.
+5. Mantener el acceso al panel Supabase restringido y activar autenticación multifactor en las cuentas administrativas.
 
-## Privacidad y operación
-- Recoge solo nombre, teléfono, tipo de participación, zona, correo opcional y mensaje opcional.
-- No solicites cédula, dirección exacta, datos bancarios ni documentos.
-- Restringe el acceso al panel Supabase a administradores autorizados y activa autenticación de dos factores en la cuenta.
-- Configura copias de seguridad y una política de retención antes de abrir la convocatoria masivamente.
-- Añade CAPTCHA/rate limiting antes de promocionar el formulario ampliamente para reducir spam y abuso.
-- La tabla no tiene permiso público de lectura. Para consultar registros, entra al panel administrativo de Supabase con una cuenta autorizada.
+## Prueba manual
+1. Enviar un registro de prueba con datos ficticios.
+2. Abrir Supabase → Table Editor → `pre_registros`.
+3. Confirmar que aparece el registro.
+4. No compartir capturas con datos personales reales.
 
-**Estado:** preparación técnica lista; la recepción real de registros requiere crear el proyecto Supabase e introducir la URL y clave pública del proyecto.
+## Archivos relevantes
+- `supabase/schema.sql`: estructura de tabla, restricciones y políticas RLS.
+- `privacidad.html`: aviso de privacidad preliminar del pre-registro.
+- `index.html`: formulario público y conexión a Supabase.
