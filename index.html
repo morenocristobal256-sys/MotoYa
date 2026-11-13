@@ -52,7 +52,7 @@ footer{border-top:1px solid #292929;padding:34px 0;color:#999}.foot{display:flex
 <section id="comunidad"><div class="wrap"><div class="section-head"><div class="eyebrow">Participa en el proyecto</div><h2>Tu opinión también <span class="gold">construye MotoYa.</span></h2><p>Estamos preparando espacios para escuchar ideas, resolver dudas y compartir avances con la comunidad.</p></div>
 <div class="community"><article class="card"><span class="tag">FORO DE LA COMUNIDAD</span><h3>Propón. Comenta. Construyamos.</h3><p>Un espacio público para compartir propuestas sobre servicios, funcionamiento, seguridad y experiencia. La publicación abierta estará disponible cuando habilitemos el sistema de cuentas y moderación.</p><a class="btn secondary" href="#registro">Quiero participar en el foro</a><p class="notice">Foro en preparación · Las publicaciones todavía no se reciben desde esta página.</p></article>
 <article class="card"><span class="tag">CHAT DE ATENCIÓN</span><h3>Hablemos directamente.</h3><p>El chat de atención será independiente del foro y servirá para consultas de pre-registro, comercios y conductores. Estamos preparando su conexión segura.</p><a class="btn secondary" href="#registro">Dejar una consulta</a><p class="notice">Chat en preparación · Por ahora puedes dejarnos tu consulta en el formulario.</p></article></div></div></section>
-<section class="band" id="registro"><div class="wrap form-wrap"><div><div class="eyebrow">Primera beta · Convocatoria de interés</div><div class="section-head"><h2>Forma parte de <span class="gold">los primeros.</span></h2><p>Déjanos tus datos básicos para conocer tu interés. Este formulario es una maqueta inicial: todavía no transmite ni almacena registros en un servidor.</p></div><p class="form-note"><strong class="gold">Fecha estimada de beta: 15 de enero de 2027.</strong><br>Fecha tentativa, sujeta al desarrollo y las pruebas.</p></div>
+<section class="band" id="registro"><div class="wrap form-wrap"><div><div class="eyebrow">Primera beta · Convocatoria de interés</div><div class="section-head"><h2>Forma parte de <span class="gold">los primeros.</span></h2><p>Déjanos tus datos básicos para conocer tu interés. Tus datos se enviarán de forma segura a la base de datos de MotoYa para gestionar el pre-registro.</p></div><p class="form-note"><strong class="gold">Fecha estimada de beta: 15 de enero de 2027.</strong><br>Fecha tentativa, sujeta al desarrollo y las pruebas.</p></div>
 <form class="form-panel" id="preform"><div class="form-grid">
 <div class="field full"><label for="tipo">Quiero participar como</label><select id="tipo" name="tipo" required><option value="">Selecciona una opción</option><option>Socio conductor</option><option>Usuario</option><option>Comercio o negocio</option></select></div>
 <div class="field"><label for="nombre">Nombre</label><input id="nombre" name="nombre" autocomplete="name" required placeholder="Tu nombre"></div>
@@ -60,8 +60,8 @@ footer{border-top:1px solid #292929;padding:34px 0;color:#999}.foot{display:flex
 <div class="field"><label for="zona">Zona o ciudad</label><input id="zona" name="zona" placeholder="Ej. Catia, Caracas"></div>
 <div class="field"><label for="correo">Correo (opcional)</label><input id="correo" name="correo" type="email" autocomplete="email" placeholder="correo@ejemplo.com"></div>
 <div class="field full"><label for="detalle">Cuéntanos brevemente qué te interesa</label><textarea id="detalle" name="detalle" placeholder="Tu experiencia, negocio o qué servicio te gustaría utilizar..."></textarea></div>
-<div class="field full"><label style="display:flex;gap:10px;align-items:flex-start;font-weight:500"><input type="checkbox" required style="width:auto;margin-top:4px"> Acepto que MotoYa me contacte sobre el proyecto y entiendo que este formulario aún es una demostración.</label></div>
-<div class="field full"><button class="btn" type="submit">Preparar mi pre-registro</button><div class="success" id="success" role="status">Formulario de demostración completado. Aún no se ha enviado ni guardado ningún registro. La conexión segura se habilitará en la siguiente etapa.</div><p class="form-note">No envíes documentos de identidad ni información sensible por esta versión preliminar.</p></div>
+<div class="field full"><label style="display:flex;gap:10px;align-items:flex-start;font-weight:500"><input id="consentimiento" name="consentimiento" type="checkbox" required style="width:auto;margin-top:4px"> Acepto que MotoYa me contacte sobre el proyecto y autorizo el uso de estos datos para gestionar mi pre-registro. <a href="privacidad.html" target="_blank" rel="noopener" style="color:#D4AF37;text-decoration:underline">Leer privacidad</a>.</label></div>
+<div class="field full"><button class="btn" type="submit">Preparar mi pre-registro</button><div class="success" id="success" role="status"></div><p class="form-note">Tus datos se utilizarán únicamente para gestionar tu interés en MotoYa. No envíes documentos de identidad ni información sensible.</p></div>
 </div></form></div></section>
 </main>
 <footer><div class="wrap foot"><div><strong>MotoYa</strong><div class="form-note">Tu envío, nuestra misión.</div></div><div class="footlinks"><a href="#servicios">Servicios</a><a href="#comunidad">Comunidad</a><a href="#registro">Pre-registro</a><a href="privacidad.html">Privacidad</a></div><div class="form-note">© 2026 MotoYa · Proyecto en desarrollo</div></div></footer>
@@ -69,6 +69,59 @@ footer{border-top:1px solid #292929;padding:34px 0;color:#999}.foot{display:flex
 const menu=document.getElementById('menu'),links=document.getElementById('navlinks');
 menu.addEventListener('click',()=>{const open=links.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));});
 links.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{links.classList.remove('open');menu.setAttribute('aria-expanded','false');}));
-document.getElementById('preform').addEventListener('submit',e=>{e.preventDefault();document.getElementById('success').style.display='block';});
+// Configuración pública de Supabase. La clave publishable está diseñada para el navegador;
+// la seguridad depende de RLS y de las políticas de la tabla.
+const SUPABASE_URL='https://uwizpyvrrxgsvtlyhvyo.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publisible_iPJas7YBMUvh8LkP0hDUQQ_agiamKuc';
+const form=document.getElementById('preform');
+const statusBox=document.getElementById('success');
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!form.reportValidity()) return;
+  const button=form.querySelector('button[type="submit"]');
+  const originalText=button.textContent;
+  button.disabled=true;
+  button.textContent='Enviando…';
+  statusBox.style.display='block';
+  statusBox.style.background='#2a2112';
+  statusBox.style.borderColor='#80651d';
+  statusBox.style.color='#f4d36b';
+  statusBox.textContent='Enviando tu pre-registro de forma segura…';
+  const data=new FormData(form);
+  const payload={
+    tipo:data.get('tipo'),
+    nombre:String(data.get('nombre')||'').trim(),
+    telefono:String(data.get('telefono')||'').trim(),
+    zona:String(data.get('zona')||'').trim()||null,
+    correo:String(data.get('correo')||'').trim()||null,
+    detalle:String(data.get('detalle')||'').trim()||null,
+    consentimiento:document.getElementById('consentimiento').checked
+  };
+  try{
+    const response=await fetch(SUPABASE_URL+'/rest/v1/pre_registros',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+SUPABASE_PUBLISHABLE_KEY,'Prefer':'return=minimal'},
+      body:JSON.stringify(payload)
+    });
+    if(!response.ok){
+      const detail=await response.text();
+      throw new Error('HTTP '+response.status+' '+detail);
+    }
+    statusBox.style.background='#192316';
+    statusBox.style.borderColor='#46613b';
+    statusBox.style.color='#d9f1cf';
+    statusBox.textContent='¡Listo! Tu pre-registro fue recibido correctamente por MotoYa. Gracias por tu interés.';
+    form.reset();
+  }catch(error){
+    console.error('Error al enviar pre-registro:',error);
+    statusBox.style.background='#301919';
+    statusBox.style.borderColor='#713737';
+    statusBox.style.color='#ffd6d6';
+    statusBox.textContent='No pudimos enviar tu pre-registro. Verifica tu conexión e inténtalo nuevamente. Si el problema continúa, avísanos.';
+  }finally{
+    button.disabled=false;
+    button.textContent=originalText;
+  }
+});
 </script>
 </body></html>
