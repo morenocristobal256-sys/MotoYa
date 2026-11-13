@@ -75,14 +75,20 @@ const SUPABASE_URL='https://uwizpyvrrxgsvtlyhvyo.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_iPJas7YBMUvh8LkP0hDUQQ_agiamKuc';
 const form=document.getElementById('preform');
 const statusBox=document.getElementById('success');
-const formOpenedAt=Date.now();
+let firstInteractionAt=null;
+const markFormInteraction=()=>{if(firstInteractionAt===null) firstInteractionAt=Date.now();};
+form.addEventListener('input',markFormInteraction);
+form.addEventListener('change',markFormInteraction);
 form.addEventListener('submit',async e=>{
   e.preventDefault();
   if(!form.reportValidity()) return;
   // Filtros básicos contra bots: campo señuelo y tiempo mínimo de llenado.
   // No sustituyen CAPTCHA ni límites de frecuencia en servidor.
-  if(document.getElementById('website').value.trim() || Date.now()-formOpenedAt<3000){
+  if(document.getElementById('website').value.trim() || firstInteractionAt===null || Date.now()-firstInteractionAt<2500){
     statusBox.style.display='block';
+    statusBox.style.background='#301919';
+    statusBox.style.borderColor='#713737';
+    statusBox.style.color='#ffd6d6';
     statusBox.textContent='No pudimos procesar el formulario. Espera un momento e inténtalo nuevamente.';
     return;
   }
